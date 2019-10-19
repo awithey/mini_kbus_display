@@ -97,7 +97,7 @@ void loop() {
       // this message was sent by the instrument cluster
       if (payloadFirstByte == 0x18 && length > 3) {
         // data is kph/2, mph is k*5/8
-        int current_speed = mph(message.b(1)*10/8);
+        int current_speed = mph(message.b(1)*2);
         displaySpeed(current_speed);
         setSpeedVolume(current_speed);
         prev_speed = current_speed;
