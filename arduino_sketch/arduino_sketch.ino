@@ -36,24 +36,24 @@
 
 #define IKE_SPEED 0x18
 #define IKE_TEMPERATURE 0x19
-#define MLF_VOL 0x32
-#define MLF_BUTTONS 0x3B
-#define MLF_BUTTON_RT 0x40
-#define MLF_BUTTONS2 0x01
+#define MFL_VOL 0x32
+#define MFL_BUTTONS 0x3B
+#define MFL_BUTTON_RT 0x40
+#define MFL_BUTTONS2 0x01
 
 Adafruit_SSD1331 display = Adafruit_SSD1331(cs, dc, rst);
 IbusTrx ibusTrx;
 
-static const byte speed_x[3] = {62, 32, 9};
-static const byte speed_w[3] = {25, 25, 18};
-static const byte temp_x[4] = {55, 39, 25};
-static const byte temp_w[4] = {18, 18, 12};
+const byte speed_x[3] = {62, 32, 9};
+const byte speed_w[3] = {25, 25, 18};
+const byte temp_x[4] = {55, 39, 25};
+const byte temp_w[4] = {18, 18, 12};
 
-static const byte vol_up_speed[3] = {35, 50, 65};
-static const byte vol_down_speed[3] = {30, 45, 60};
-unsigned int prev_speed = 0;
-unsigned int prev_speed_colour = DEFAULT_COLOUR;
-unsigned int prev_temp_colour = DEFAULT_COLOUR; 
+const byte vol_up_speed[3] = {35, 50, 65};
+const byte vol_down_speed[3] = {30, 45, 60};
+int prev_speed = 0;
+int prev_speed_colour = DEFAULT_COLOUR;
+int prev_temp_colour = DEFAULT_COLOUR; 
 char current_char, prev_char;
 String def_speed_str = "   ", def_temp_str = "   ";
 String prev_speed_str = "***", prev_temp_str = "***";
@@ -62,7 +62,7 @@ uint8_t volumeUp[5] = {
   M_MFL, // sender ID (steering wheel)
   0x04,  // length of the message payload (including destination ID and checksum)
   M_RAD, // destination ID (radio)
-  MLF_VOL, // the type of message
+  MFL_VOL, // the type of message
   11, // Up
   // don't worry about the checksum, the library automatically calculates it for you
 };
@@ -71,7 +71,7 @@ uint8_t volumeDown[5] = {
   M_MFL, // sender ID (steering wheel)
   0x04,  // length of the message payload (including destination ID and checksum)
   M_RAD, // destination ID (radio)
-  MLF_VOL, // the type of message
+  MFL_VOL, // the type of message
   10,  // Down  
   // don't worry about the checksum, the library automatically calculates it for you
 };
@@ -105,8 +105,8 @@ void loop() {
       // this message was sent by the instrument cluster
       if (payloadFirstByte == IKE_SPEED && length > 3) {
         // data is kph/2
-        unsigned int payloadFirstByte = message.b(1);
-        int current_speed = mph(payloadFirstByte*2);
+        int kph2 = message.b(1);
+        int current_speed = mph(kph2*2);
         displaySpeed(current_speed);
         setSpeedVolume(current_speed);
         prev_speed = current_speed;
@@ -116,12 +116,12 @@ void loop() {
         displayTemperature(current_temp);
       }
     } else if (sourceID == M_MFL) {
-      if (payloadFirstByte == MLF_BUTTONS && length > 3) {
+      if (payloadFirstByte == MFL_BUTTONS && length > 3) {
         // first pos. code for RT buttom
-        if (message.b(1) == MLF_BUTTON_RT) {
+        if (message.b(1) == MFL_BUTTON_RT) {
           ibusTrx.write(volumeUp);
         }
-      } else if (payloadFirstByte == MLF_BUTTONS2) {
+      } else if (payloadFirstByte == MFL_BUTTONS2) {
         //second code for RT button
         ibusTrx.write(volumeDown);
       }
@@ -129,7 +129,7 @@ void loop() {
   }
 }
 
-unsigned int mph(unsigned int kph){
+int mph(int kph){
   // mph is kph*5/8
   // The Mini's displayed speed is over by a few mph, so add a 4% "correction"
   // Multiply by 100 and add 50 then div 100 to round up when answer would be >= x.5
@@ -138,7 +138,7 @@ unsigned int mph(unsigned int kph){
   return ((kph * 104UL * 5 / 8) + 50)/100;
 }
 
-void setSpeedVolume(unsigned int current_speed) {
+void setSpeedVolume(int current_speed) {
   if (current_speed != prev_speed) {
     for (int i=0; i<3; i++){
       if (current_speed >= vol_up_speed[i] && prev_speed < vol_up_speed[i]) {
@@ -150,8 +150,8 @@ void setSpeedVolume(unsigned int current_speed) {
   }
 }
 
-void displaySpeed(unsigned int current_speed) {
-  unsigned int colour = DEFAULT_COLOUR;
+void displaySpeed(int current_speed) {
+  int colour = DEFAULT_COLOUR;
   if (current_speed > 85) {
     colour = YELLOW;
   }
@@ -162,7 +162,7 @@ void displaySpeed(String current_speed_str) {
   displaySpeed(current_speed_str, DEFAULT_COLOUR);
 }
 
-void displaySpeed(String current_speed_str, unsigned int colour) {
+void displaySpeed(String current_speed_str, int colour) {
   if (colour != prev_speed_colour) {
     prev_speed_str=def_speed_str;
     prev_speed_colour = colour;
@@ -170,8 +170,8 @@ void displaySpeed(String current_speed_str, unsigned int colour) {
   prev_speed_str = displayDelta(current_speed_str, prev_speed_str, 3, speed_x, speed_y, speed_w, speed_h, &FreeSansBold24pt7b, colour);
 }
 
-void displayTemperature(unsigned int current_temp) {
-  unsigned int colour = DEFAULT_COLOUR;
+void displayTemperature(int current_temp) {
+  int colour = DEFAULT_COLOUR;
   if (current_temp < -5) {
     colour = BLUE;
   } else if (current_temp < 2) {
@@ -186,7 +186,7 @@ void displayTemperature(String current_temp_str) {
   displayTemperature(current_temp_str, DEFAULT_COLOUR);
 }
 
-void displayTemperature(String current_temp_str, unsigned int colour) {
+void displayTemperature(String current_temp_str, int colour) {
   if (colour != prev_temp_colour) {
     prev_temp_str=def_temp_str;
     prev_temp_colour = colour;
@@ -194,7 +194,7 @@ void displayTemperature(String current_temp_str, unsigned int colour) {
   prev_temp_str = displayDelta(current_temp_str, prev_temp_str, 3, temp_x, temp_y, temp_w, temp_h, &FreeSansOblique12pt7b, colour);
 }
 
-String displayDelta(String data_str, String prev_str, int num_char, byte x_arr[], byte y, byte w_arr[], byte h, const GFXfont* font, unsigned int colour) {
+String displayDelta(String data_str, String prev_str, int num_char, byte x_arr[], byte y, byte w_arr[], byte h, const GFXfont* font, int colour) {
   int data_str_len = data_str.length();
   int prev_str_len = prev_str.length();
 
