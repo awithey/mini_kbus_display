@@ -40,6 +40,7 @@ IbusTrx ibusTrx;
 int16_t speed_x[3] = {62, 32, 9};
 int16_t speed_w[3] = {25, 25, 18};
 int16_t temp_x[4] = {55, 39, 25};
+
 int16_t temp_w[4] = {18, 18, 12};
 int vol_up_speed[3] = {35, 50, 65};
 int vol_down_speed[3] = {30, 45, 60};
@@ -97,7 +98,8 @@ void loop() {
       // this message was sent by the instrument cluster
       if (payloadFirstByte == 0x18 && length > 3) {
         // data is kph/2, mph is k*5/8
-        int current_speed = mph(message.b(1)*2);
+        unsigned int payloadFirstByte = message.b(1);
+        int current_speed = mph(payloadFirstByte*2);
         displaySpeed(current_speed);
         setSpeedVolume(current_speed);
         prev_speed = current_speed;
@@ -110,7 +112,8 @@ void loop() {
 }
 
 int mph(int kph){
-  return kph * 5 / 8;
+  // multiple by 10 and add 5 then div 10 to round x.5 to (x+1) when doing div math
+  return ((kph * 50 / 8) + 5)/10;
 }
 
 void setSpeedVolume(int current_speed) {
