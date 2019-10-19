@@ -44,19 +44,21 @@
 Adafruit_SSD1331 display = Adafruit_SSD1331(cs, dc, rst);
 IbusTrx ibusTrx;
 
-const byte speed_x[3] = {62, 32, 9};
-const byte speed_w[3] = {25, 25, 18};
-const byte temp_x[4] = {55, 39, 25};
-const byte temp_w[4] = {18, 18, 12};
+byte speed_x[3] = {62, 32, 9};
+byte speed_w[3] = {25, 25, 18};
+byte temp_x[4] = {55, 39, 25};
+byte temp_w[4] = {18, 18, 12};
 
-const byte vol_up_speed[3] = {35, 50, 65};
-const byte vol_down_speed[3] = {30, 45, 60};
+byte vol_up_speed[3] = {35, 50, 65};
+byte vol_down_speed[3] = {30, 45, 60};
 int prev_speed = 0;
 int prev_speed_colour = DEFAULT_COLOUR;
 int prev_temp_colour = DEFAULT_COLOUR; 
 char current_char, prev_char;
 String def_speed_str = "   ", def_temp_str = "   ";
 String prev_speed_str = "***", prev_temp_str = "***";
+
+bool rt = false;
 
 uint8_t volumeUp[5] = {
   M_MFL, // sender ID (steering wheel)
@@ -117,13 +119,18 @@ void loop() {
       }
     } else if (sourceID == M_MFL) {
       if (payloadFirstByte == MFL_BUTTONS && length > 3) {
+        display.setFont();
+        display.setCursor(0, temp_y + temp_h);
+        rt = !rt;
+        if (rt) {
+          display.print("R");
+        } else {
+          display.print("  ");
+        }
         // first pos. code for RT buttom
         if (message.b(1) == MFL_BUTTON_RT) {
           ibusTrx.write(volumeUp);
         }
-      } else if (payloadFirstByte == MFL_BUTTONS2) {
-        //second code for RT button
-        ibusTrx.write(volumeDown);
       }
     }
   }
