@@ -36,10 +36,8 @@
 
 #define IKE_SPEED 0x18
 #define IKE_TEMPERATURE 0x19
-#define MFL_VOL 0x32
-#define MFL_BUTTONS 0x3B
-#define MFL_BUTTON_RT 0x40
-#define MFL_BUTTONS2 0x01
+#define MFL_BUTTONS 0x32
+#define MFL_RT 0x0a
 
 Adafruit_SSD1331 display = Adafruit_SSD1331(cs, dc, rst);
 IbusTrx ibusTrx;
@@ -49,8 +47,8 @@ byte speed_w[3] = {25, 25, 18};
 byte temp_x[4] = {55, 39, 25};
 byte temp_w[4] = {18, 18, 12};
 
-byte vol_up_speed[3] = {35, 50, 65};
-byte vol_down_speed[3] = {30, 45, 60};
+byte vol_up_speed[3] = {35, 45, 60};
+byte vol_down_speed[3] = {30, 40, 55};
 int prev_speed = 0;
 int prev_speed_colour = DEFAULT_COLOUR;
 int prev_temp_colour = DEFAULT_COLOUR; 
@@ -64,7 +62,7 @@ uint8_t volumeUp[5] = {
   M_MFL, // sender ID (steering wheel)
   0x04,  // length of the message payload (including destination ID and checksum)
   M_RAD, // destination ID (radio)
-  MFL_VOL, // the type of message
+  MFL_BUTTONS, // the type of message
   11, // Up
   // don't worry about the checksum, the library automatically calculates it for you
 };
@@ -73,7 +71,7 @@ uint8_t volumeDown[5] = {
   M_MFL, // sender ID (steering wheel)
   0x04,  // length of the message payload (including destination ID and checksum)
   M_RAD, // destination ID (radio)
-  MFL_VOL, // the type of message
+  MFL_BUTTONS, // the type of message
   10,  // Down  
   // don't worry about the checksum, the library automatically calculates it for you
 };
@@ -103,7 +101,7 @@ void loop() {
     unsigned int length = message.length(); // read the length of the payload
     unsigned int payloadFirstByte = message.b(0); // read the first byte of the payload
     // do something with this message
-    if (sourceID == M_IKE) {
+    if (sourceID == M_IKE && (destinationID == M_LCM)) {
       // this message was sent by the instrument cluster
       if (payloadFirstByte == IKE_SPEED && length > 3) {
         // data is kph/2
@@ -117,18 +115,18 @@ void loop() {
         int current_temp = message.b(1);
         displayTemperature(current_temp);
       }
-    } else if (sourceID == M_MFL) {
-      if (payloadFirstByte == MFL_BUTTONS && length > 3) {
-        display.setFont();
-        display.setCursor(0, temp_y + temp_h);
-        rt = !rt;
-        if (rt) {
-          display.print("R");
-        } else {
-          display.print("  ");
-        }
+    } else if (sourceID == M_MFL && destinationID == M_RAD) {
+      if (payloadFirstByte == MFL_BUTTONS && length > 2) {
         // first pos. code for RT buttom
-        if (message.b(1) == MFL_BUTTON_RT) {
+        if (message.b(1) == MFL_RT) {
+          display.setFont();
+          display.setCursor(0, temp_y + temp_h);
+          rt = !rt;
+          if (rt) {
+            display.print("R");
+          } else {
+            display.print("  ");
+          }
           ibusTrx.write(volumeUp);
         }
       }
