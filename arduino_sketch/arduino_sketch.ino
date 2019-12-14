@@ -57,7 +57,7 @@ char current_char, prev_char;
 String def_speed_str = "   ", def_temp_str = "   ";
 String prev_speed_str = "***", prev_temp_str = "***";
 
-bool testing = true;
+bool testing = false; // Set to true to cycle through values instead of reading the IBus
 
 long loop_timer_now;  //holds the current millis
 long previous_millis;  //holds the previous millis
@@ -218,6 +218,7 @@ void displayTemperature(String current_temp_str, int colour) {
   prev_temp_str = displayDelta(current_temp_str, prev_temp_str, 3, temp_x, temp_y, temp_w, temp_h, &FreeSansOblique12pt7b, colour);
 }
 
+// To reduce flickering, only update a character when it changes
 String displayDelta(String data_str, String prev_str, int num_char, byte x_arr[], byte y, byte w_arr[], byte h, const GFXfont* font, int colour) {
   int data_str_len = data_str.length();
   int prev_str_len = prev_str.length();
