@@ -22,19 +22,17 @@
 #define MAGENTA         0xF81F
 #define YELLOW          0xFFE0  
 #define WHITE           0xFFFF
-#define ORANGE          0xFBE0
+#define ORANGE          0xF860
 #define DRKYELLOW       0xEFE0
-#define DRKCYAN         0x07EE
+#define DRKCYAN         0x041F
 
 #define DEFAULT_COLOUR  ORANGE
 #define BACK_COLOUR  BLACK
 
-#define speed_x 9
-#define speed_y 0
-#define speed_h 35
-#define temp_x 25
-#define temp_y 45
-#define temp_h 17
+#define speed_x 90
+#define speed_y 30
+#define temp_x 69
+#define temp_y 62
 
 
 #define IKE_SPEED 0x18
@@ -55,7 +53,12 @@ char current_char, prev_char;
 String def_speed_str = "   ", def_temp_str = "   ";
 String prev_speed_str = "***", prev_temp_str = "***";
 
-bool rt = false;
+bool testing = true;
+
+long loop_timer_now;          //holds the current millis
+long previous_millis;         //holds the previous millis
+int test_speed = 0;
+int test_temp = 0;
 
 uint8_t volumeUp[5] = {
   M_MFL, // sender ID (steering wheel)
@@ -84,16 +87,31 @@ void setup() {
 
   display.setFont(&FreeSansOblique12pt7b);
   // setfont FreeSans print has 0 at BOTTOM of char
-  display.setCursor(73, temp_y + temp_h);
+  display.setCursor(73, temp_y);
   display.print("C");
   displaySpeed(def_speed_str);
   displayTemperature(def_temp_str);
 
   ibusTrx.begin(Serial); // begin listening on the first hardware serial port
+  previous_millis = millis();
 }
 
 void loop() {
-  if (ibusTrx.available()) { // if there's a message waiting, do something with it
+  if (testing) {
+    loop_timer_now = millis();
+    if ((loop_timer_now - previous_millis) > 1000) {
+      test_speed++;
+      if (test_speed > 135) test_speed = 0;
+      displaySpeed(test_speed);
+      setSpeedVolume(test_speed);
+      prev_speed = test_speed;
+      test_temp++;
+      if (test_temp > 55) test_temp = -35;
+      displayTemperature(test_temp);
+      previous_millis = loop_timer_now; 
+    }
+  }
+  if (!testing && ibusTrx.available()) { // if there's a message waiting, do something with it
     IbusMessage message = ibusTrx.readMessage(); // grab the message
     unsigned int sourceID = message.source(); // read the source id
     unsigned int destinationID = message.destination(); // read the destination id
@@ -111,7 +129,7 @@ void loop() {
         prev_speed = current_speed;
 
       } else if (payloadFirstByte == IKE_TEMPERATURE && length > 3) {
-        int current_temp = message.b(1);
+        signed char current_temp = (byte) 255; //message.b(1);
         displayTemperature(current_temp);
       }
     } else if (sourceID == M_MFL && destinationID == M_TEL) {
@@ -169,7 +187,7 @@ void displaySpeed(String current_speed_str, int colour) {
     prev_speed_str=def_speed_str;
     prev_speed_colour = colour;
   }
-  prev_speed_str = displayDelta(current_speed_str, prev_speed_str, speed_x, speed_y, speed_h, &FreeSansBold24pt7b, colour);
+  prev_speed_str = displayDelta(current_speed_str, prev_speed_str, speed_x, speed_y, &FreeSansBold24pt7b, colour);
 }
 
 void displayTemperature(int current_temp) {
@@ -193,24 +211,35 @@ void displayTemperature(String current_temp_str, int colour) {
     prev_temp_str=def_temp_str;
     prev_temp_colour = colour;
   }
-  prev_temp_str = displayDelta(current_temp_str, prev_temp_str, temp_x, temp_y, temp_h, &FreeSansOblique12pt7b, colour);
+  prev_temp_str = displayDelta(current_temp_str, prev_temp_str, temp_x, temp_y, &FreeSansOblique12pt7b, colour);
 }
 
-String displayDelta(String data_str, String prev_str, int x, int y, int h, const GFXfont* font, int colour) {
+String displayDelta(String data_str, String prev_str, int x, int y, const GFXfont* font, int colour) {
   if (data_str != prev_str) {
     // only update if changed
     
     display.setFont(font);
-    // setfont FreeSans print has 0 at BOTTOM of char
-    display.setCursor(x, y+h);
+    int16_t  x1, y1;
+    uint16_t ww, hh;
+    display.getTextBounds(string2char(prev_str), 1, 1, &x1, &y1, &ww, &hh );
+    display.setCursor(x - ww, y);
 
     // erase prev string
     display.setTextColor(BACK_COLOUR);
     display.print(prev_str);
 
+    display.getTextBounds(string2char(data_str), 1, 1, &x1, &y1, &ww, &hh );
+    display.setCursor(x - ww, y);
     display.setTextColor(colour);
     display.print(data_str);
     prev_str = data_str;
   }
   return prev_str;
+}
+
+char* string2char(String command){
+    if(command.length()!=0){
+        char *p = const_cast<char*>(command.c_str());
+        return p;
+    }
 }
