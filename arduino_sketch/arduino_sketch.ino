@@ -56,6 +56,7 @@ int prev_temp_colour = DEFAULT_COLOUR;
 char current_char, prev_char;
 String def_speed_str = "   ", def_temp_str = "   ";
 String prev_speed_str = "***", prev_temp_str = "***";
+String reset_speed_str = "###", reset_temp_str = "###";
 
 bool testing = false; // Set to true to cycle through values instead of reading the IBus
 
@@ -103,7 +104,7 @@ void setup() {
 void loop() {
   if (testing) {
     loop_timer_now = millis();
-    if ((loop_timer_now - previous_millis) > 1000) {
+    if ((loop_timer_now - previous_millis) > 250) {
       test_speed++;
       if (test_speed > 135) test_speed = 0;
       displaySpeed(test_speed);
@@ -188,7 +189,7 @@ void displaySpeed(String current_speed_str) {
 
 void displaySpeed(String current_speed_str, int colour) {
   if (colour != prev_speed_colour) {
-    prev_speed_str = def_speed_str; // force update of entire string when colour changes
+    prev_speed_str = reset_speed_str; // force update of entire string when colour changes
     prev_speed_colour = colour;
   }
   prev_speed_str = displayDelta(current_speed_str, prev_speed_str, 3, speed_x, speed_y, speed_w, speed_h, &FreeSansBold24pt7b, colour);
@@ -212,7 +213,7 @@ void displayTemperature(String current_temp_str) {
 
 void displayTemperature(String current_temp_str, int colour) {
   if (colour != prev_temp_colour) {
-    prev_temp_str = def_temp_str; // force update of entire string when colour changes
+    prev_temp_str = reset_temp_str; // force update of entire string when colour changes
     prev_temp_colour = colour;
   }
   prev_temp_str = displayDelta(current_temp_str, prev_temp_str, 3, temp_x, temp_y, temp_w, temp_h, &FreeSansOblique12pt7b, colour);
