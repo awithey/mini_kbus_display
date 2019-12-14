@@ -134,7 +134,7 @@ void loop() {
         prev_speed = current_speed;
 
       } else if (payloadFirstByte == IKE_TEMPERATURE && length > 3) {
-        signed char current_temp = (byte) 255; //message.b(1);
+        signed char current_temp = message.b(1);
         displayTemperature(current_temp);
       }
     } else if (sourceID == M_MFL && destinationID == M_TEL) {
