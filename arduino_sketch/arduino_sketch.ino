@@ -22,14 +22,17 @@
 #define MAGENTA         0xF81F
 #define YELLOW          0xFFE0  
 #define WHITE           0xFFFF
-#define ORANGE          0xF8E0
+#define ORANGE          0xFBE0
 #define DRKYELLOW       0xEFE0
 #define DRKCYAN         0x07EE
 
 #define DEFAULT_COLOUR  ORANGE
+#define BACK_COLOUR  BLACK
 
+#define speed_x 9
 #define speed_y 0
 #define speed_h 35
+#define temp_x 25
 #define temp_y 45
 #define temp_h 17
 
@@ -42,14 +45,9 @@
 Adafruit_SSD1331 display = Adafruit_SSD1331(cs, dc, rst);
 IbusTrx ibusTrx;
 
-byte speed_x[3] = {62, 32, 9};
-byte speed_w[3] = {25, 25, 18};
-byte temp_x[4] = {55, 39, 25};
-byte temp_w[4] = {18, 18, 12};
-
-byte vol_up_speed[3] = {35, 45, 60};
-byte vol_down_speed[3] = {30, 40, 55};
-byte current_speed_vol = 0;
+int vol_up_speed[4] = {35, 45, 55, 65};
+int vol_down_speed[4] = {30, 40, 50, 60};
+int current_speed_vol = 0;
 int prev_speed = 0;
 int prev_speed_colour = DEFAULT_COLOUR;
 int prev_temp_colour = DEFAULT_COLOUR; 
@@ -78,7 +76,7 @@ uint8_t volumeDown[5] = {
 };
 
 void setup() {
-  display.begin();
+  display.begin(80000000); //80Mhz
   display.fillScreen(DEFAULT_COLOUR);
   delay(100);
   display.fillScreen(BLACK);
@@ -171,7 +169,7 @@ void displaySpeed(String current_speed_str, int colour) {
     prev_speed_str=def_speed_str;
     prev_speed_colour = colour;
   }
-  prev_speed_str = displayDelta(current_speed_str, prev_speed_str, 3, speed_x, speed_y, speed_w, speed_h, &FreeSansBold24pt7b, colour);
+  prev_speed_str = displayDelta(current_speed_str, prev_speed_str, speed_x, speed_y, speed_h, &FreeSansBold24pt7b, colour);
 }
 
 void displayTemperature(int current_temp) {
@@ -195,38 +193,24 @@ void displayTemperature(String current_temp_str, int colour) {
     prev_temp_str=def_temp_str;
     prev_temp_colour = colour;
   }
-  prev_temp_str = displayDelta(current_temp_str, prev_temp_str, 3, temp_x, temp_y, temp_w, temp_h, &FreeSansOblique12pt7b, colour);
+  prev_temp_str = displayDelta(current_temp_str, prev_temp_str, temp_x, temp_y, temp_h, &FreeSansOblique12pt7b, colour);
 }
 
-String displayDelta(String data_str, String prev_str, int num_char, byte x_arr[], byte y, byte w_arr[], byte h, const GFXfont* font, int colour) {
-  int data_str_len = data_str.length();
-  int prev_str_len = prev_str.length();
+String displayDelta(String data_str, String prev_str, int x, int y, int h, const GFXfont* font, int colour) {
+  if (data_str != prev_str) {
+    // only update if changed
+    
+    display.setFont(font);
+    // setfont FreeSans print has 0 at BOTTOM of char
+    display.setCursor(x, y+h);
 
-  for (int i=0; i<num_char; i++) {
-    if (i < data_str_len) {
-      current_char = data_str.charAt(data_str_len-i-1);
-    } else {
-      current_char = ' ';
-    }
-    if (i < prev_str_len) {
-      prev_char = prev_str.charAt(prev_str_len-i-1);
-    } else {
-      prev_char = ' ';
-    }
-    if (current_char != prev_char) {
-      if (prev_char > ' ') {
-        //erase old digit
-        display.fillRect(x_arr[i], y, w_arr[i], h+2, BLACK);
-      }
-      if (current_char > ' ') {
-        display.setTextColor(colour);
-        display.setFont(font);
-        // setfont FreeSans print has 0 at BOTTOM of char
-        display.setCursor(x_arr[i], y+h);
-        display.print(current_char);
-      }
-    }
+    // erase prev string
+    display.setTextColor(BACK_COLOUR);
+    display.print(prev_str);
+
+    display.setTextColor(colour);
+    display.print(data_str);
+    prev_str = data_str;
   }
-  prev_str = data_str;
   return prev_str;
 }
