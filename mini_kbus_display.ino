@@ -39,6 +39,8 @@
 #define temp_y 45
 #define temp_h 17
 
+#define SPEED_HIGHLIGHT 130
+
 #define IKE_SPEED 0x18
 #define IKE_TEMPERATURE 0x19
 #define MFL_BUTTONS 0x32
@@ -48,9 +50,9 @@ Adafruit_SSD1331 display = Adafruit_SSD1331(cs, dc, rst);
 IbusTrx ibusTrx;
 
 // character positions
-byte speed_x[3] = {62, 32, 9};
-byte speed_w[3] = {25, 25, 18};
-byte temp_x[3] = {60, 44, 30};
+byte speed_x[3] = {65, 36, 8};
+byte speed_w[3] = {25, 25, 25};
+byte temp_x[3] = {50, 34, 21};
 byte temp_w[4] = {18, 18, 12};
 
 // This is always in kph
@@ -93,24 +95,45 @@ uint8_t volumeDown[5] = {
 void setup() {
   display.begin(80000000); //80Mhz
   display.fillScreen(BACK_COLOUR);
-  if (MPH) {
-    displaySpeed("mph");
-  } else {
-    displaySpeed("kph");
-  }
-  delay(500);
-  display.fillScreen(BACK_COLOUR);
 
+  display.setTextColor(GREEN);
+  display.setFont();
+  if (DISPLAY_TEST) {
+    display.setCursor(10, 5);
+    display.print("TEST MODE");
+    display.setCursor(10, 20);
+    if (MPH) {
+      display.print("mph");
+    } else {
+      display.print("kph");
+    }
+    display.setCursor(10, 35);
+    if (ADJUSTVOLUME) {
+      display.print("vol: on");    
+    } else {
+      display.print("vol: off");    
+    }
+    display.setCursor(10, 50);
+    if (FAHRENHEIT) {
+      display.print("Farenheit");    
+    } else {
+      display.print("Celsius");    
+    }
+    delay(2000);
+    display.fillScreen(BACK_COLOUR);
+  }
+  
   display.setTextColor(DEFAULT_COLOUR);
   display.setFont(&FreeSansOblique12pt7b);
-  display.setCursor(5, speed_y + speed_h);
-  // setfont - FreeSans print has 0 at BOTTOM of char
-  display.setCursor(68, temp_y + temp_h);
+  // FYI FreeSans print has 0 at BOTTOM of char
+  display.setCursor(74, temp_y + temp_h);
   if (FAHRENHEIT) {
-    display.print("°F");
+    display.print("F");
   } else {
-    display.print("°C");
+    display.print("C");
   }
+  display.drawCircle(73, temp_y + 2, 2, DEFAULT_COLOUR);
+  displaySpeed("   ");
   displayTemperature("   ");
 
   ibusTrx.begin(Serial); // begin listening on the first hardware serial port
@@ -122,7 +145,7 @@ void loop() {
     loop_timer_now = millis();
     if ((loop_timer_now - previous_millis) > 250) {
       test_speed++;
-      if (test_speed > 135) test_speed = 0;
+      if (test_speed > 220) test_speed = 0;
       displaySpeed(test_speed);
       setSpeedVolume(test_speed);
       prev_speed_kph = test_speed;
@@ -199,7 +222,7 @@ void setSpeedVolume(int current_speed) {
 
 void displaySpeed(int current_speed) {
   int colour = DEFAULT_COLOUR;
-  if (current_speed > 85) {
+  if (current_speed > SPEED_HIGHLIGHT) {
     colour = YELLOW;
   }
   if (MPH) {
