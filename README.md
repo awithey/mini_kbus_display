@@ -14,8 +14,8 @@ You need to add the following Arduino Libraries to your IDE:
 * https://www.arduinolibraries.info/libraries/adafruit-ssd1331-oled-driver-library-for-arduino
 
 Notes:
-The speed is in MPH. If you would like KPH, you will need to edit the code: change line 131 to `int current_speed = kph2*2;`
-The temperature is in Celcius.
+* The speed is in MPH. If you would like KPH, you will need to edit the code: change line 131 to `int current_speed = kph2*2;`
+* The temperature is in Celcius.
 
-Testing the display.
+### Testing the display.
 If you set `bool testing = true;` (line 61), the display will continually cycle through the speed and temperature ranges. This allows you to test on a breadboard without having to connect it to a canbus.
