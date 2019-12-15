@@ -92,12 +92,18 @@ uint8_t volumeDown[5] = {
 
 void setup() {
   display.begin(80000000); //80Mhz
-  display.fillScreen(DEFAULT_COLOUR);
-  delay(100);
-  display.fillScreen(BLACK);
-  display.setTextColor(DEFAULT_COLOUR);
+  display.fillScreen(BACK_COLOUR);
+  if (MPH) {
+    displaySpeed("mph");
+  } else {
+    displaySpeed("kph");
+  }
+  delay(500);
+  display.fillScreen(BACK_COLOUR);
 
+  display.setTextColor(DEFAULT_COLOUR);
   display.setFont(&FreeSansOblique12pt7b);
+  display.setCursor(5, speed_y + speed_h);
   // setfont - FreeSans print has 0 at BOTTOM of char
   display.setCursor(68, temp_y + temp_h);
   if (FAHRENHEIT) {
@@ -106,12 +112,6 @@ void setup() {
     display.print("°C");
   }
   displayTemperature("   ");
-
-  if (MPH) {
-    displaySpeed("mph");
-  } else {
-    displaySpeed("kph");
-  }
 
   ibusTrx.begin(Serial); // begin listening on the first hardware serial port
   previous_millis = millis();
