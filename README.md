@@ -1,6 +1,6 @@
 # mini_kbus_display
 
-This is code for a simple digital speedometer and temperature guage for a BMW Mini (it shoudl also work with some "E46" BMWs as well).
+This is code for a simple digital speedometer and temperature guage for a BMW Mini (it will also work with "E46" 3 Series BMWs as well).
 
 It is designed for an Arduino Nano and 7 pin SPI colour oled display (e.g. https://www.banggood.com/0_95-Inch-7pin-Full-Color-65K-Color-SSD1331-SPI-OLED-Display-For-Arduino-p-1068167.html).
 
