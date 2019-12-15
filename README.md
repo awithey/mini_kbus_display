@@ -13,9 +13,6 @@ You need to add the following Arduino Libraries to your IDE:
 * https://www.arduinolibraries.info/libraries/adafruit-gfx-library
 * https://www.arduinolibraries.info/libraries/adafruit-ssd1331-oled-driver-library-for-arduino
 
-It also requires the following font files:
-
-
 Notes:
 The speed is in MPH. If you would like KPH, you will need to edit the code: change line 131 to `int current_speed = kph2*2;`
 The temperature is in Celcius.
