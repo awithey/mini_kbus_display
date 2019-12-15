@@ -19,3 +19,6 @@ Notes:
 
 ### Testing the display.
 If you set `bool testing = true;` (line 61), the display will continually cycle through the speed and temperature ranges. This allows you to test on a breadboard without having to connect it to a canbus.
+
+### 3D Printed case and mount
+see: https://www.thingiverse.com/thing:4050115
