@@ -14,12 +14,13 @@ You need to add the following Arduino Libraries to your IDE:
 * https://www.arduinolibraries.info/libraries/adafruit-ssd1331-oled-driver-library-for-arduino
 
 Notes:
-* The speed is in MPH. If you would like KPH, you will need to edit the code: `int current_speed = kph2*2;` (line 132)
-* The temperature is in Celcius.
-* The radio / stereo volume will be adjusted with your speed. (I have an eftermarket head-unit). If you don't want this, just comment out: `//setSpeedVolume(current_speed);` (line 134)
+* The speed is in MPH. If you would like KPH, you will need to edit the code, set: `#define MPH false`
+* The temperature is in Celcius. For Fahrenheit, set: `#define FAHRENHEIT true`
+* The radio / stereo volume will be adjusted with your speed. (I have an aftermarket head-unit). If you don't want this, set: `#define ADJUSTVOLUME false`
 
 ### Testing the display.
 If you set `#define DISPLAY_TEST true` (line 15), the display will continually cycle through the speed and temperature ranges. This allows you to test on a breadboard without having to connect it to a canbus.
 
 ### 3D Printed case and mount
 see: https://www.thingiverse.com/thing:4050115
+
