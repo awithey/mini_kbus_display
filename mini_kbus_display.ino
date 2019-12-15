@@ -13,6 +13,9 @@
 #define rst  7
 #define dc   8
 
+// Set to true to cycle through values instead of reading the IBus
+#define DISPLAY_TEST false 
+
 // Color definitions RGB565
 #define BLACK           0x0000
 #define BLUE            0x001F
@@ -58,8 +61,6 @@ String def_speed_str = "   ", def_temp_str = "   ";
 String prev_speed_str = "***", prev_temp_str = "***";
 String reset_speed_str = "###", reset_temp_str = "###";
 
-bool testing = false; // Set to true to cycle through values instead of reading the IBus
-
 long loop_timer_now;  //holds the current millis
 long previous_millis;  //holds the previous millis
 int test_speed = 0;
@@ -102,7 +103,7 @@ void setup() {
 }
 
 void loop() {
-  if (testing) {
+  if (DISPLAY_TEST) {
     loop_timer_now = millis();
     if ((loop_timer_now - previous_millis) > 250) {
       test_speed++;
@@ -116,7 +117,7 @@ void loop() {
       previous_millis = loop_timer_now; 
     }
   }
-  if (!testing && ibusTrx.available()) { // if there's a message waiting, do something with it
+  if (!DISPLAY_TEST && ibusTrx.available()) { // if there's a message waiting, do something with it
     IbusMessage message = ibusTrx.readMessage(); // grab the message
     unsigned int sourceID = message.source(); // read the source id
     unsigned int destinationID = message.destination(); // read the destination id
