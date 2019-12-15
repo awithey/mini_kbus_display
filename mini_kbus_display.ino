@@ -13,8 +13,9 @@
 #define rst  7
 #define dc   8
 
-// Set to true to cycle through values instead of reading the IBus
-#define DISPLAY_TEST false 
+#define DISPLAY_TEST false  // Set to true to cycle through values instead of reading the IBus
+#define MPH true            // Set to true to display the current speed in MPH, false for KPH
+#define FAHRENHEIT false    // Set to true to display the temperature in Farenheit, false for Celsius
 
 // Color definitions RGB565
 #define BLACK           0x0000
@@ -48,17 +49,21 @@ IbusTrx ibusTrx;
 // character positions
 byte speed_x[3] = {62, 32, 9};
 byte speed_w[3] = {25, 25, 18};
-byte temp_x[4] = {55, 39, 25};
+byte temp_x[3] = {60, 44, 30};
 byte temp_w[4] = {18, 18, 12};
-int vol_up_speed[4] = {35, 45, 55, 65};
-int vol_down_speed[4] = {30, 40, 50, 60};
+
+// This is always in kph
+int vol_up_speed[4] = {55, 72, 90, 105};
+// The volume down speed is less than the volume up speed to avoid too many changes if your speed is close to one of the triggers.
+int vol_down_speed[4] = {50, 67, 85, 100};
 int current_speed_vol = 0;
-int prev_speed = 0;
-int prev_speed_colour = DEFAULT_COLOUR;
+
+int prev_speed_kph = 0;
+int prev_speed_kph_colour = DEFAULT_COLOUR;
 int prev_temp_colour = DEFAULT_COLOUR; 
+
 char current_char, prev_char;
-String def_speed_str = "   ", def_temp_str = "   ";
-String prev_speed_str = "***", prev_temp_str = "***";
+String prev_speed_kph_str = "***", prev_temp_str = "***";
 String reset_speed_str = "###", reset_temp_str = "###";
 
 long loop_timer_now;  //holds the current millis
@@ -92,11 +97,20 @@ void setup() {
   display.setTextColor(DEFAULT_COLOUR);
 
   display.setFont(&FreeSansOblique12pt7b);
-  // setfont FreeSans print has 0 at BOTTOM of char
-  display.setCursor(73, temp_y + temp_h);
-  display.print("C");
-  displaySpeed(def_speed_str);
-  displayTemperature(def_temp_str);
+  // setfont - FreeSans print has 0 at BOTTOM of char
+  display.setCursor(68, temp_y + temp_h);
+  if (FAHRENHEIT) {
+    display.print("°F");
+  } else {
+    display.print("°C");
+  }
+  displayTemperature("   ");
+
+  if (MPH) {
+    displaySpeed("mph");
+  } else {
+    displaySpeed("kph");
+  }
 
   ibusTrx.begin(Serial); // begin listening on the first hardware serial port
   previous_millis = millis();
@@ -110,7 +124,7 @@ void loop() {
       if (test_speed > 135) test_speed = 0;
       displaySpeed(test_speed);
       setSpeedVolume(test_speed);
-      prev_speed = test_speed;
+      prev_speed_kph = test_speed;
       test_temp++;
       if (test_temp > 55) test_temp = -35;
       displayTemperature(test_temp);
@@ -128,22 +142,26 @@ void loop() {
       // this message was sent by the instrument cluster
       if (payloadFirstByte == IKE_SPEED && length > 3) {
         // data is kph/2
-        int kph2 = message.b(1);
-        int current_speed = mph(kph2*2);
-        displaySpeed(current_speed);
-        setSpeedVolume(current_speed);
-        prev_speed = current_speed;
+        int current_speed_kph = message.b(1)*2;
+        displaySpeed(current_speed_kph);
+        setSpeedVolume(current_speed_kph);
+        prev_speed_kph = current_speed_kph;
 
       } else if (payloadFirstByte == IKE_TEMPERATURE && length > 3) {
-        signed char current_temp = message.b(1);
-        displayTemperature(current_temp);
+        signed char current_temp_c = message.b(1);
+        displayTemperature(current_temp_c);
       }
     } else if (sourceID == M_MFL && destinationID == M_TEL) {
       if (payloadFirstByte == MFL_RT && length > 2) {
         // first pos. code for RT buttom
+        // ToDo: Do something if R/T button pushed ...
       }
     }
   }
+}
+
+int fahrenheit(int celsius) {
+  return (celsius*2) + 30;
 }
 
 int mph(int kph){
@@ -156,15 +174,15 @@ int mph(int kph){
 }
 
 void setSpeedVolume(int current_speed) {
-  if (current_speed != prev_speed) {
+  if (current_speed != prev_speed_kph) {
     for (int i=0; i<3; i++){
-      if (current_speed >= vol_up_speed[i] && prev_speed < vol_up_speed[i]) {
+      if (current_speed >= vol_up_speed[i] && prev_speed_kph < vol_up_speed[i]) {
         // target speed vol is i + 1;
         if ((i+1) > current_speed_vol) {
           ibusTrx.write(volumeUp);
           current_speed_vol++;
         }
-      } else if (current_speed <= vol_down_speed[i] && prev_speed > vol_down_speed[i]) {
+      } else if (current_speed <= vol_down_speed[i] && prev_speed_kph > vol_down_speed[i]) {
         // target speed vol is i
         if (i < current_speed_vol
         ) {
@@ -181,6 +199,9 @@ void displaySpeed(int current_speed) {
   if (current_speed > 85) {
     colour = YELLOW;
   }
+  if (MPH) {
+    current_speed = mph(current_speed);
+  }
   displaySpeed(String(current_speed), colour);
 }
 
@@ -189,11 +210,11 @@ void displaySpeed(String current_speed_str) {
 }
 
 void displaySpeed(String current_speed_str, int colour) {
-  if (colour != prev_speed_colour) {
-    prev_speed_str = reset_speed_str; // force update of entire string when colour changes
-    prev_speed_colour = colour;
+  if (colour != prev_speed_kph_colour) {
+    prev_speed_kph_str = reset_speed_str; // force update of entire string when colour changes
+    prev_speed_kph_colour = colour;
   }
-  prev_speed_str = displayDelta(current_speed_str, prev_speed_str, 3, speed_x, speed_y, speed_w, speed_h, &FreeSansBold24pt7b, colour);
+  prev_speed_kph_str = displayDelta(current_speed_str, prev_speed_kph_str, 3, speed_x, speed_y, speed_w, speed_h, &FreeSansBold24pt7b, colour);
 }
 
 void displayTemperature(int current_temp) {
@@ -204,6 +225,9 @@ void displayTemperature(int current_temp) {
     colour = DRKCYAN;
   } else if (current_temp > 30) {
     colour = YELLOW;
+  }
+  if (FAHRENHEIT) {
+    current_temp = fahrenheit(current_temp);
   }
   displayTemperature(String(current_temp), colour);
 }
