@@ -16,6 +16,7 @@
 #define DISPLAY_TEST false  // Set to true to cycle through values instead of reading the IBus
 #define MPH true            // Set to true to display the current speed in MPH, false for KPH
 #define FAHRENHEIT false    // Set to true to display the temperature in Farenheit, false for Celsius
+#define ADJUSTVOLUME true   // Set to true to adjust the radio / stereo volume with the speed
 
 // Color definitions RGB565
 #define BLACK           0x0000
@@ -144,7 +145,9 @@ void loop() {
         // data is kph/2
         int current_speed_kph = message.b(1)*2;
         displaySpeed(current_speed_kph);
-        setSpeedVolume(current_speed_kph);
+        if (ADJUSTVOLUME) {
+          setSpeedVolume(current_speed_kph);
+        }
         prev_speed_kph = current_speed_kph;
 
       } else if (payloadFirstByte == IKE_TEMPERATURE && length > 3) {
