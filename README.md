@@ -6,7 +6,7 @@ It is designed for an Arduino Nano and 7 pin SPI colour oled display (e.g. https
 
 If you use a different type of Arduino or display, you will need to update the SPI pin definitions (lines 10-14).
 
-It expects a canbus (iBus) interface on the serial pins. I used a TH3112 (http://www.datasheetdir.com/TH3122+LIN)
+It expects a K-Bus (iBus) interface on the serial pins. I used a TH3112 (http://www.datasheetdir.com/TH3122+LIN)
 
 You need to add the following Arduino Libraries to your IDE:
 * https://www.arduinolibraries.info/libraries/ibus-trx
